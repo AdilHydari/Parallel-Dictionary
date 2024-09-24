@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <mutex>
 #include <shared_mutex>
+#include <thread>
 
 // Define a thread-safe unordered_map
 class ConcurrentDictionary {
@@ -56,19 +57,23 @@ private:
     mutable std::shared_mutex mutex_;
 };
 
-// Helper function to split a string into words
+// Helper function to split a string into words without modifying the input
 std::vector<std::string> splitToWords(const std::string& text) {
     std::vector<std::string> words;
     size_t pos = 0, length = text.length();
     while (pos < length) {
+        // Skip non-alphabetic characters
         while (pos < length && !isalpha(text[pos])) ++pos;
         size_t start = pos;
+        // Collect alphabetic characters
         while (pos < length && isalpha(text[pos])) {
-            text[pos] = tolower(text[pos]);
             ++pos;
         }
         if (start < pos) {
-            words.emplace_back(text.substr(start, pos - start));
+            // Convert the word to lowercase without modifying the original string
+            std::string word = text.substr(start, pos - start);
+            std::transform(word.begin(), word.end(), word.begin(), ::tolower);
+            words.emplace_back(std::move(word));
         }
     }
     return words;
@@ -79,6 +84,10 @@ void processBooks(const std::vector<std::string>& books, ConcurrentDictionary& d
     for (size_t i = 0; i < books.size(); ++i) {
         const auto& bookFile = books[i];
         std::ifstream file(bookFile);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << bookFile << std::endl;
+            continue;
+        }
         std::string line;
         int bookId = startBookId + static_cast<int>(i);
         while (std::getline(file, line)) {
@@ -93,11 +102,17 @@ void processBooks(const std::vector<std::string>& books, ConcurrentDictionary& d
 int main() {
     // List of book files (add paths to all 110 books)
     std::vector<std::string> allBooks = {
-        "/home/adilh/classes/ECE451-Parallel/data/books/pg55.txt", "/home/adilh/classes/ECE451-Parallel/data/books/pg5200.txt", // ...
+        "/home/adilh/classes/ECE451-Parallel/data/books/pg5200.txt", // Add paths to all 110 books here
     };
 
-    // Use a thread pool size equal to the hardware concurrency
-    const unsigned int numThreads = std::thread::hardware_concurrency();
+    // Check if the list of books is empty
+    if (allBooks.empty()) {
+        std::cerr << "No books provided." << std::endl;
+        return 1;
+    }
+
+    // Use a thread pool size equal to the hardware concurrency or 4 if hardware_concurrency is not available
+    const unsigned int numThreads = std::max(1u, std::thread::hardware_concurrency());
     std::vector<std::future<void>> futures;
     std::vector<ConcurrentDictionary> dicts(numThreads);
 
@@ -119,7 +134,7 @@ int main() {
         future.get();
     }
 
-    // Merge dictionaries in parallel
+    // Merge dictionaries
     ConcurrentDictionary finalDict;
     for (const auto& dict : dicts) {
         finalDict.merge(dict);

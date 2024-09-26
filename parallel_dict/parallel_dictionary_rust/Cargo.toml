@@ -1,0 +1,8 @@
+[package]
+name = "parallel_dictionary_rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+walkdir = "2.3"
+tokio = { version = "1", features = ["full"] }

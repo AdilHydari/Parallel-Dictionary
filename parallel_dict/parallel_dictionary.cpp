@@ -9,6 +9,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
+#include <filesystem>
 
 // Define a thread-safe unordered_map
 class ConcurrentDictionary {
@@ -99,11 +100,19 @@ void processBooks(const std::vector<std::string>& books, ConcurrentDictionary& d
     }
 }
 
+std::vector<std::string> getAllBookFiles(const std::string& directory) {
+    std::vector<std::string> bookFiles;
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(directory)) {
+        if (entry.is_regular_file()) {
+            bookFiles.push_back(entry.path().string());
+        }
+    }
+    return bookFiles;
+}
 int main() {
     // List of book files (add paths to all 110 books)
-    std::vector<std::string> allBooks = {
-        "/home/adilh/classes/ECE451-Parallel/data/books/pg5200.txt", // Add paths to all 110 books here
-    };
+    std::string booksDirectory = "/home/adilh/classes/ECE451-Parallel/data/books";
+    std::vector<std::string> allBooks = getAllBookFiles(booksDirectory);
 
     // Check if the list of books is empty
     if (allBooks.empty()) {

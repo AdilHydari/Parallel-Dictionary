@@ -14,7 +14,6 @@ use walkdir::WalkDir;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Config {
-    /// Directory containing the book files
     #[arg(
         short,
         long,
@@ -22,7 +21,7 @@ struct Config {
     )]
     directory: String,
 
-    /// Output file to save the results (JSON format)
+    /// save to json
     #[arg(short, long)]
     output: Option<String>,
 }
@@ -141,7 +140,6 @@ fn get_all_book_files(directory: &str) -> Vec<String> {
 }
 
 fn main() {
-    // Parse command-line arguments
     let config = Config::parse();
 
     let books_directory = config.directory;
@@ -152,7 +150,6 @@ fn main() {
         return;
     }
 
-    // Determine the number of threads to use
     let num_threads = thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(4);
@@ -193,7 +190,6 @@ fn main() {
         handles.push(handle);
     }
 
-    // Drop the main progress bar to allow it to be updated by threads
     drop(pb);
 
     let final_dict = handles
@@ -210,7 +206,6 @@ fn main() {
     let mut final_dict = final_dict;
     final_dict.remove_single_occurrences();
 
-    // Output results
     if let Some(output_file) = config.output {
         match final_dict.to_json() {
             Ok(json_str) => match File::create(&output_file) {

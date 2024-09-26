@@ -1,18 +1,39 @@
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use tokio::task;
 use std::thread;
 
+use clap::Parser;
+use indicatif::{ProgressBar, ProgressStyle};
+use rayon::prelude::*;
+use serde::Serialize;
+use std::io::Write;
 use walkdir::WalkDir;
 
-#[derive(Debug)]
+/// Program to process books and count word occurrences.
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Config {
+    /// Directory containing the book files
+    #[arg(
+        short,
+        long,
+        default_value = "/home/adilh/classes/ECE451-Parallel/data/books"
+    )]
+    directory: String,
+
+    /// Output file to save the results (JSON format)
+    #[arg(short, long)]
+    output: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
 struct Entry {
     word_count: usize,
     book_ids: HashSet<usize>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 struct Dictionary {
     dict: HashMap<String, Entry>,
 }
@@ -58,6 +79,10 @@ impl Dictionary {
             );
         }
     }
+
+    fn to_json(&self) -> serde_json::Result<String> {
+        serde_json::to_string_pretty(&self.dict)
+    }
 }
 
 fn split_to_words(text: &str) -> Vec<String> {
@@ -79,7 +104,7 @@ fn split_to_words(text: &str) -> Vec<String> {
     words
 }
 
-async fn process_books(books: &[String], start_book_id: usize) -> Dictionary {
+fn process_books(books: &[String], start_book_id: usize) -> Dictionary {
     let mut dict = Dictionary::new();
     for (i, book_file) in books.iter().enumerate() {
         let file = match File::open(book_file) {
@@ -105,10 +130,7 @@ async fn process_books(books: &[String], start_book_id: usize) -> Dictionary {
 
 fn get_all_book_files(directory: &str) -> Vec<String> {
     let mut book_files = Vec::new();
-    for entry in WalkDir::new(directory)
-        .into_iter()
-        .filter_map(Result::ok)
-    {
+    for entry in WalkDir::new(directory).into_iter().filter_map(Result::ok) {
         if entry.file_type().is_file() {
             if let Some(path_str) = entry.path().to_str() {
                 book_files.push(path_str.to_string());
@@ -118,22 +140,36 @@ fn get_all_book_files(directory: &str) -> Vec<String> {
     book_files
 }
 
-#[tokio::main]
-async fn main() {
-    let books_directory = "/home/adilh/classes/ECE451-Parallel/data";
-    let all_books = get_all_book_files(books_directory);
+fn main() {
+    // Parse command-line arguments
+    let config = Config::parse();
+
+    let books_directory = config.directory;
+    let all_books = get_all_book_files(&books_directory);
 
     if all_books.is_empty() {
-        eprintln!("No books provided.");
+        eprintln!("No books found in the directory: {}", books_directory);
         return;
     }
 
+    // Determine the number of threads to use
     let num_threads = thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(4);
 
     let total_books = all_books.len();
     let books_per_thread = (total_books + num_threads - 1) / num_threads;
+
+    let pb = ProgressBar::new(total_books as u64);
+    let style = ProgressStyle::default_bar()
+        .template("[{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} Books")
+        .unwrap_or_else(|e| {
+            eprintln!("Failed to set progress bar template: {}", e);
+            ProgressStyle::default_bar().progress_chars("#>-")
+        })
+        .progress_chars("#>-");
+
+    pb.set_style(style);
 
     let mut handles = Vec::new();
 
@@ -145,19 +181,55 @@ async fn main() {
         }
         let thread_books = all_books[start_idx..end_idx].to_vec();
         let start_book_id = start_idx;
+        let pb_clone = pb.clone(); // Clone the progress bar for the thread
 
-        let handle = task::spawn(async move { process_books(&thread_books, start_book_id).await });
+        let handle = thread::spawn(move || {
+            let dict = process_books(&thread_books, start_book_id);
+            for _ in 0..thread_books.len() {
+                pb_clone.inc(1);
+            }
+            dict
+        });
         handles.push(handle);
     }
 
-    let mut final_dict = Dictionary::new();
-    for handle in handles {
-        let dict = handle.await.unwrap();
-        final_dict.merge(&dict);
-    }
+    // Drop the main progress bar to allow it to be updated by threads
+    drop(pb);
 
+    let final_dict = handles
+        .into_par_iter()
+        .map(|handle| handle.join().unwrap())
+        .reduce(
+            || Dictionary::new(),
+            |mut acc, dict| {
+                acc.merge(&dict);
+                acc
+            },
+        );
+
+    let mut final_dict = final_dict;
     final_dict.remove_single_occurrences();
 
-    final_dict.print();
+    // Output results
+    if let Some(output_file) = config.output {
+        match final_dict.to_json() {
+            Ok(json_str) => match File::create(&output_file) {
+                Ok(mut file) => {
+                    if let Err(e) = file.write_all(json_str.as_bytes()) {
+                        eprintln!("Failed to write to file {}: {}", output_file, e);
+                    } else {
+                        println!("Results successfully written to {}", output_file);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Failed to create file {}: {}", output_file, e);
+                }
+            },
+            Err(e) => {
+                eprintln!("Failed to serialize dictionary to JSON: {}", e);
+            }
+        }
+    } else {
+        final_dict.print();
+    }
 }
-

@@ -1,0 +1,7 @@
+# Notes
+## Async vs Normal threading (In this case)
+Async threading in this case seems be less useful than I orginally thought, since this homework seems to be more CPU-bound than anything. With the amount of files being read I thought it would be benefical to simply use async threads for the enhanced file IO speeds that come with Async threading. However, I made the mistake of making everything async threaded since that seemed to be the easiest way to wrap my head around it. Instead, Tokio's async threading introduces overhead for task scheduling and context switching which ends up slowing down the CPU-bound tasks. So I instead went for normal threading, and that seemed to work pretty well, even for the file IO. The way this works (at least in my head) is since each thread handles its own set of files, the blocking IO doesn't significantly lower performance versus going for Async file IO.
+## Next steps
+The next steps would be to combine tokio's async file operations with simple threading for CPU-bound tasks, this would provide a small incremental speedup. For larger datasets, this would help a lot more.
+### Side note for Linux/Windows Async
+The way that Linux implements Async IO ops is with io_uring, and Windows has a very simillar thing IoRing that seems to be very similar in it's operation. Async IO is not always supported on all operating systems however, IoRing was only added a few years ago and io_uring a few years before that.

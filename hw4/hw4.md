@@ -74,44 +74,43 @@ https://docs.google.com/spreadsheets/d/10DiQJcTMTqcE1JjSKFx0AWUcOAqu75cQUcKsF0jt
      2. Find the CPU and memory configuration for the machine you tested. This can be About... in windows, or in linux you can use lscpu and cat /proc/cpuinfo
      - lscpu output: 
      ```
-     Architecture:             aarch64
-  CPU op-mode(s):         64-bit
-  Byte Order:             Little Endian
-CPU(s):                   10
-  On-line CPU(s) list:    0-9
-Vendor ID:                Apple
-  Model name:             Icestorm-M1-Pro
-    Model:                0
-    Thread(s) per core:   1
-    Core(s) per socket:   2
-    Socket(s):            1
-    Stepping:             0x2
-    Frequency boost:      enabled
-    CPU(s) scaling MHz:   29%
-    CPU max MHz:          2064.0000
-    CPU min MHz:          600.0000
-    BogoMIPS:             48.00
-    Flags:                fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 asim
-                          ddp sha512 asimdfhm dit uscat ilrcpc flagm ssbs sb paca pacg dcpodp flagm2 frint
-  Model name:             Firestorm-M1-Pro
-    Model:                0
-    Thread(s) per core:   1
-    Core(s) per socket:   8
-    Socket(s):            1
-    Stepping:             0x2
-    CPU(s) scaling MHz:   84%
-    CPU max MHz:          3228.0000
-    CPU min MHz:          600.0000
-    BogoMIPS:             48.00
-    Flags:                fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 asim
-                          ddp sha512 asimdfhm dit uscat ilrcpc flagm ssbs sb paca pacg dcpodp flagm2 frint
-Caches (sum of all):      
-  L1d:                    1.1 MiB (10 instances)
-  L1i:                    1.8 MiB (10 instances)
-  L2:                     28 MiB (3 instances)
-NUMA:                     
-  NUMA node(s):           1
-  NUMA node0 CPU(s):      0-9
+   Architecture:             aarch64
+   CPU op-mode(s):         64-bit
+   Byte Order:             Little Endian
+   CPU(s):                   10
+   On-line CPU(s) list:    0-9
+   Vendor ID:                Apple
+   Model name:             Icestorm-M1-Pro
+   Model:                0
+   Thread(s) per core:   1
+   Core(s) per socket:   2
+   Socket(s):            1
+   Stepping:             0x2
+   Frequency boost:      enabled
+   CPU(s) scaling MHz:   29%
+   CPU max MHz:          2064.0000
+   CPU min MHz:          600.0000
+   BogoMIPS:             48.00
+   Flags:                fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 asim
+   ddp sha512 asimdfhm dit uscat ilrcpc flagm ssbs sb paca pacg dcpodp flagm2 frint
+   Model name:             Firestorm-M1-Pro
+   Model:                0
+   Thread(s) per core:   1
+   Core(s) per socket:   8
+   Socket(s):            1
+   Stepping:             0x2
+   CPU(s) scaling MHz:   84%
+   CPU max MHz:          3228.0000
+   CPU min MHz:          600.0000
+   BogoMIPS:             48.00
+   Flags:                fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcmalrcpc dcpop sha3 asim ddp sha512 asimdfhm dit uscat ilrcpc flagm ssbs sb paca pacg dcpodp flagm2 frint
+   Caches (sum of all):      
+   L1d:                    1.1 MiB (10 instances)
+   L1i:                    1.8 MiB (10 instances)
+   L2:                     28 MiB (3 instances)
+   NUMA:                     
+   NUMA node(s):           1
+   NUMA node0 CPU(s):      0-9
      ```
 5. Explain what a cache is
    a. Explain what a cache miss is

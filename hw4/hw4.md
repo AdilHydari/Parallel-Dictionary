@@ -41,23 +41,27 @@
    b. If you have more than one computer you can pick the one you use. You may enter more than one.
 https://docs.google.com/spreadsheets/d/10DiQJcTMTqcE1JjSKFx0AWUcOAqu75cQUcKsF0jtxBg/edit?usp=sharing
 
-2. Basics of Multiprocessing
+2. Basics of Multiprocessing <br /> 
     a. What is a process?
     - A process is a running program that operates in its own separate memory address space.
+
     b. What is a thread?
     - A thread is a execution unit for a process, each thread can execute independently of each other but must merge into a single result at the end.
+
     c. Every thread requires at a minimum sp, pc/rip. Explain
     - Each thread maintains its own SP to make sure that the function calls and local variables are not accessed by other threads, as to interfere with each other.
     - The PC and RIP keeps track of where the thread is in execution, allowing the CPU to fetch and execute instructions in the correct order.
-    d. A computer with 4 cores is running a job.
-       1 thread, t=10s, 2 threads t=5s, 4 threads t=3s
-       Neglecting hyperthreading, Why might it not be a good idea to run with 8 threads? 
+
+    d. A computer with 4 cores is running a job.<br /> 
+       1 thread, t=10s, 2 threads t=5s, 4 threads t=3s<br /> 
+       Neglecting hyperthreading, Why might it not be a good idea to run with 8 threads? <br /> 
       - In this case we are refering to software threads since we are using more threads than cores, which means that we will have to context switch and time slice our threads to make 8 software threads fit inside of those 4 cores. This introduces overhead for context switching and time slicing, as well as the threads competing for I/O bound resources. This means that the speed up is no longer linear, and may not even speed up the program past these 4 (hardware) threads. 
 
 
-3. Explain the benchmark results for memory_timings.s.
+3. Explain the benchmark results for memory_timings.s <br /> 
    a. For each function run explain (in one line) what it is attempting to measure.
    - read_one: Measures the throughput of repeatedly reading a single 64-bit memory location.
+   - write_one: Measures the throughput of repeatedly writing a single 64-bit memory location.
    - read_memory_scalar: Throughput of sequentially reading 64-bit memory locations one at a time.
    - read_memory_sse: Throughput of sequentially reading 64-bit memory locations using SSE (128 bit).
    - read_memory_avx: Throughput of sequentially reading 64-bit memory locations using AVX (256 bit).
@@ -65,6 +69,11 @@ https://docs.google.com/spreadsheets/d/10DiQJcTMTqcE1JjSKFx0AWUcOAqu75cQUcKsF0jt
    - read_memory_avx_unaligned: Throughput of sequentially reading 64-bit memory locations using AVX (256 bit) without alignment.
    - read_memory_every2: Throughput of reading every second 64-bit location
    - read_memory_everyk: Throughput of reading every k-th 64-bit location
+   - read_one_avx: Throughput of repeatedly reading a single 64-bit memory location using AVX (256 bit).
+   - write_one_avx: Throughput of repeatedly writing a single 64-bit memory location using AVX (256 bit).
+   - write_memory_scalar: Throughput of sequentially writing 64-bit memory locations one at a time.
+   - write_memory_avx: Throughput of sequentially writing 64-bit memory locations using AVX (256 bit).
+
    b. Why is write_one so much slower than read_one?
 
    c. Why is read_memory_avx faster than read_memory_scalar if both are reading the same amount of memory sequentially?
@@ -114,7 +123,7 @@ https://docs.google.com/spreadsheets/d/10DiQJcTMTqcE1JjSKFx0AWUcOAqu75cQUcKsF0jt
      ```
 5. Explain what a cache is
    a. Explain what a cache miss is
-   - 
+   - a cache miss is when a cache line (with x data) is not found in the cache and instead has to go to the main memory to find the (x) data.
 
 6. Why is it so important to understand memory performance for parallel computing?
 - A lot of CPU operations are memory bound, meaning that it is not the computing that is bottlenecked, but rather the speed at which the CPU can grab the next instruction to execute.

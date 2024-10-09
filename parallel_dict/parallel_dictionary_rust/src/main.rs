@@ -10,7 +10,6 @@ use serde::Serialize;
 use std::io::Write;
 use walkdir::WalkDir;
 
-/// Program to process books and count word occurrences.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Config {
